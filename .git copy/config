@@ -1,0 +1,34 @@
+[core]
+	repositoryformatversion = 0
+	filemode = false
+	bare = false
+	logallrefupdates = true
+	symlinks = false
+	ignorecase = true
+[remote "origin"]
+	url = https://github.com/birhanu-ma/Medical-Data-Scraper.git
+	fetch = +refs/heads/*:refs/remotes/origin/*
+[branch "main"]
+	remote = origin
+	merge = refs/heads/main
+	vscode-merge-base = origin/main
+[branch "task-1"]
+	vscode-merge-base = origin/main
+	remote = origin
+	merge = refs/heads/task-1
+[branch "task-2"]
+	vscode-merge-base = origin/task-1
+	remote = origin
+	merge = refs/heads/task-2
+[branch "task-3"]
+	vscode-merge-base = origin/task-2
+	remote = origin
+	merge = refs/heads/task-3
+[branch "task-4"]
+	vscode-merge-base = origin/task-3
+	remote = origin
+	merge = refs/heads/task-4
+[branch "task-5"]
+	vscode-merge-base = origin/task-4
+	remote = origin
+	merge = refs/heads/task-5

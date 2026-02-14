@@ -1,0 +1,9 @@
+version: 2
+
+sources:
+  - name: raw_data      # This MUST match the first part of {{ source('raw_data', ...) }}
+    schema: public      # This is where your tables (fct_messages, image_analysis) are
+    tables:
+      - name: telegram_messages
+      - name: image_analysis
+      - name: fct_messages

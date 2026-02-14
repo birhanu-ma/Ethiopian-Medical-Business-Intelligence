@@ -1,0 +1,27 @@
+name: 'medical_warehouse'
+version: '1.0.0'
+config-version: 2
+
+# This must match the header name inside your profiles.yml
+profile: 'medical_warehouse' 
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# The hierarchy here reflects your folder structure inside the "models" directory
+models:
+  medical_warehouse:
+    # This configuration applies to all models in the models/staging/ directory
+    staging:
+      +materialized: view
+    # This configuration applies to all models in the models/marts/ directory
+    marts:
+      +materialized: table

@@ -1,0 +1,32 @@
+# --- Environment & Configuration ---
+python-dotenv         # To load secrets (API keys) from .env
+pydantic[email]       # Data validation for API and schemas
+
+# --- Task 1: Data Scraping & Collection ---
+telethon              # Telegram API client for scraping
+asyncio               # For asynchronous scraping operations
+
+# --- Task 2: Data Transformation (dbt) ---
+dbt-postgres          # dbt adapter for PostgreSQL
+       # PostgreSQL database adapter for Python scripts
+sqlalchemy            # Database connection engine
+
+# --- Task 3: Data Enrichment (YOLO) ---
+ultralytics           # YOLOv8 implementation
+opencv-python         # Image processing helper
+pandas                # To save detection results to CSV
+
+# --- Task 4: Analytical API ---
+fastapi               # Web framework for the API
+uvicorn               # ASGI server to run FastAPI
+
+# --- Task 5: Pipeline Orchestration ---
+dagster               # Orchestration framework
+dagster-webserver     # Dagster UI for monitoring
+dagster-postgres      # Dagster integration with PostgreSQL
+dagster-dbt           # Dagster integration for dbt models
+
+# --- Testing & Documentation ---
+pytest                # For unit testing
+pydantic-settings 
+psycopg2-binary

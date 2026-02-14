@@ -1,0 +1,11 @@
+medical_warehouse:
+  outputs:
+    dev:
+      type: postgres
+      host: localhost
+      user: birhanu        # Changed from postgres to birhanu
+      password: '7121'
+      port: 5432
+      dbname: medical_warehouse
+      schema: public 
+  target: dev
