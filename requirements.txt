@@ -30,3 +30,9 @@ dagster-dbt           # Dagster integration for dbt models
 pytest                # For unit testing
 pydantic-settings 
 psycopg2-binary
+
+transformers
+torch
+deep-translator
+tqdm
+dotenv
