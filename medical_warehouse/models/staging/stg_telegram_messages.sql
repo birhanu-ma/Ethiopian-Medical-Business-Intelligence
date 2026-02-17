@@ -1,18 +1,20 @@
+{{ config(materialized='view') }}
+
 WITH raw_data AS (
-    SELECT * FROM {{ source('raw_data', 'fct_messages') }}
+    SELECT * FROM {{ source('raw', 'telegram_messages') }}
 )
 
 SELECT
     CAST(message_id AS INT) AS message_id,
-    -- Keep this named channel_key so the Mart can find it
-    CAST(channel_key AS TEXT) AS channel_key,
-    -- Keep the raw date/timestamp available for the Mart's TO_CHAR function
-    -- We'll call it 'message_date' to be safe
-    CAST(date_key AS TEXT) AS message_date, 
+    -- Mapping "channel_name" from JSON to "channel_key"
+    CAST(channel_name AS TEXT) AS channel_key, 
+    -- Mapping the timestamp string to a DATE type
+    CAST(message_date AS DATE) AS message_date,
     TRIM(message_text) AS message_text,
-    COALESCE(CAST(view_count AS INT), 0) AS view_count,
-    -- Use the column from your scraper
-    has_image 
+    -- Mapping "has_media" from JSON to "has_image"
+    COALESCE(has_media, FALSE) AS has_image,
+    -- Mapping "views" from JSON to "view_count"
+    COALESCE(CAST(views AS INT), 0) AS view_count
 FROM raw_data
 WHERE message_text IS NOT NULL 
   AND message_text != ''

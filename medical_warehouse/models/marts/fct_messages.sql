@@ -6,7 +6,5 @@ SELECT
     message_date AS date_key,
     message_text,
     view_count,
-    has_image,
-  
-
+    has_image
 FROM {{ ref('stg_telegram_messages') }}
