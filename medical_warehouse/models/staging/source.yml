@@ -1,13 +1,18 @@
 version: 2
 
 sources:
-  - name: processed
-    schema: public
-    tables:
-      - name: fct_messages
-      - name: image_analysis
-
   - name: raw
-    schema: raw
+    description: "Raw data ingested from Telegram JSON files."
+    schema: raw  # The Python script now creates and uses this schema
     tables:
       - name: telegram_messages
+        description: "Initial landing table for Telegram messages."
+
+  - name: processed
+    description: "Data that has been cleaned or handled by Python/External tools."
+    schema: processed
+    tables:
+      - name: fct_messages
+        description: "The processed version of messages uploaded by Python."
+      - name: image_analysis
+        description: "Results from the image detection and analysis pipeline."
