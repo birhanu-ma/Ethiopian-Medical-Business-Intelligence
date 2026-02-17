@@ -7,13 +7,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
+          
       - name: Install dependencies
         run: |
-          pip install pytest pytest-asyncio pandas sqlalchemy telethon ultralytics pydantic-settings
+          # Added psycopg2-binary for database connection
+          # Added shap and joblib for model explainability tests
+          pip install pytest pytest-asyncio pandas sqlalchemy psycopg2-binary \
+                      telethon ultralytics pydantic-settings shap joblib
+                      
       - name: Run Tests
         run: |
           # Add current directory to PYTHONPATH so imports work
