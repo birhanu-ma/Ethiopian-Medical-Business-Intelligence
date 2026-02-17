@@ -31,3 +31,6 @@ pytest                # For unit testing
 pydantic-settings 
 psycopg2-binary
 pytest-asyncio
+shap
+streamlit 
+plotly
