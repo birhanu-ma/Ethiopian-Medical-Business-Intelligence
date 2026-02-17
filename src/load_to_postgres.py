@@ -3,22 +3,45 @@ import json
 import os
 import glob
 import sys
-import os
-# 1. Dynamically find the project root (Medical-Data-Scraper)
-# This goes up one level from src/ to the root
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+from sqlalchemy import text, create_engine
 
-# 2. Add the project root to sys.path so 'api' can be found
+# 1. Dynamically find the project root
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
-# 3. Now this import will work
-from app.api.database import get_db_engine
+
+# Import settings from your config file
+from app.core.config import settings
 
 class TelegramDataLoader:
     def __init__(self):
-        """Initializes the loader using the central database engine."""
-        self.engine = get_db_engine()
-        print(f"Loader initialized with engine: {self.engine.url.database}")
+        """Initializes the loader and ensures the database exists."""
+        self._ensure_database_exists()
+        # Create the engine for the specific project database
+        self.engine = create_engine(settings.DATABASE_URL)
+        print(f"✅ Loader initialized for database: {settings.DB_NAME}")
+
+    def _ensure_database_exists(self):
+        """Connects to system 'postgres' DB to create target DB if missing."""
+        # Build URL for the default postgres maintenance database
+        sys_url = f"postgresql://{settings.DB_USER}:{settings.DB_PASS}@{settings.DB_HOST}:{settings.DB_PORT}/postgres"
+        
+        # Isolation level AUTOCOMMIT is required for CREATE DATABASE
+        temp_engine = create_engine(sys_url, isolation_level="AUTOCOMMIT")
+        
+        try:
+            with temp_engine.connect() as conn:
+                exists = conn.execute(
+                    text(f"SELECT 1 FROM pg_database WHERE datname = '{settings.DB_NAME}'")
+                ).scalar()
+                
+                if not exists:
+                    print(f"🚀 Database '{settings.DB_NAME}' not found. Creating it now...")
+                    conn.execute(text(f"CREATE DATABASE {settings.DB_NAME}"))
+                else:
+                    print(f"💎 Database '{settings.DB_NAME}' exists.")
+        finally:
+            temp_engine.dispose()
 
     def load_json_files(self, folder_path):
         """Reads JSON files from a folder and all subfolders."""
@@ -26,6 +49,10 @@ class TelegramDataLoader:
         search_pattern = os.path.join(folder_path, "**", "*.json")
         files = glob.glob(search_pattern, recursive=True)
         
+        if not files:
+            print(f"⚠️ No JSON files found in {folder_path}")
+            return []
+
         for file_path in files:
             with open(file_path, 'r', encoding='utf-8') as f:
                 try:
@@ -35,19 +62,27 @@ class TelegramDataLoader:
                     else:
                         all_messages.append(data)
                 except json.JSONDecodeError:
-                    print(f"Skipping invalid JSON: {file_path}")
+                    print(f"❌ Skipping invalid JSON: {file_path}")
                     
-        print(f"Successfully read {len(all_messages)} records.")
+        print(f"📊 Read {len(all_messages)} records from local files.")
         return all_messages
 
-    def upload_to_postgres(self, data, table_name, schema='raw'):
-        """Uploads data to PostgreSQL."""
+    def upload_to_postgres(self, data, table_name, schema):
+        """Uploads data to PostgreSQL and ensures the schema exists."""
         if not data:
-            print("No data provided for upload.")
+            print("🛑 No data to upload.")
             return
 
         df = pd.DataFrame(data)
+        
         try:
+            # Ensure the specific schema (e.g., 'raw') exists
+            with self.engine.connect() as conn:
+                conn.execute(text(f"CREATE SCHEMA IF NOT EXISTS {schema};"))
+                conn.commit()
+                print(f"📂 Schema '{schema}' verified.")
+
+            # Load data into the database
             df.to_sql(
                 table_name, 
                 con=self.engine, 
@@ -55,15 +90,24 @@ class TelegramDataLoader:
                 if_exists='append', 
                 index=False
             )
-            print(f"Successfully loaded {len(df)} records into {schema}.{table_name}")
+            print(f"✅ Successfully loaded {len(df)} records into {schema}.{table_name}")
+            
         except Exception as e:
-            print(f"An error occurred during upload: {e}")
+            print(f"🔥 An error occurred during upload: {e}")
 
-    def run_pipeline(self, folder_path, table_name, schema='raw'):
+    def run_pipeline(self, folder_path, table_name="telegram_messages", schema="raw"):
+        """Executes the full Load-and-Upload process."""
         data = self.load_json_files(folder_path)
-        self.upload_to_postgres(data, table_name, schema)
+        if data:
+            self.upload_to_postgres(data, table_name, schema)
 
 if __name__ == "__main__":
-    # Example usage
     loader = TelegramDataLoader()
-    loader.run_pipeline("../data/raw/telegram_messages", "fct_messages")
+    
+    # We load to the 'raw' schema. Table name should be 'telegram_messages'
+    # so that dbt can find it via your source.yml configuration.
+    loader.run_pipeline(
+        folder_path="../data/raw/telegram_messages", 
+        table_name="telegram_messages", 
+        schema="raw"
+    )
