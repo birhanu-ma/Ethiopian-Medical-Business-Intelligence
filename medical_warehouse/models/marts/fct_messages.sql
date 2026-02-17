@@ -7,8 +7,6 @@ SELECT
     message_text,
     view_count,
     has_image,
-    tone_label,
-    content_category,
-    final_category
+  
 
 FROM {{ ref('stg_telegram_messages') }}
