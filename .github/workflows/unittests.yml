@@ -5,6 +5,25 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
+    
+    # --- ADD THIS SECTION ---
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: birhanu
+          POSTGRES_PASSWORD: 7121
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        # Wait until postgres is healthy before starting the job
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    # ------------------------
+
     steps:
       - uses: actions/checkout@v3
       
@@ -15,13 +34,13 @@ jobs:
           
       - name: Install dependencies
         run: |
-          # Added psycopg2-binary for database connection
-          # Added shap and joblib for model explainability tests
           pip install pytest pytest-asyncio pandas sqlalchemy psycopg2-binary \
                       telethon ultralytics pydantic-settings shap joblib
                       
       - name: Run Tests
+        env:
+          # Match these to the service env above
+          DATABASE_URL: postgresql://birhanu:7121@localhost:5432/postgres
         run: |
-          # Add current directory to PYTHONPATH so imports work
           export PYTHONPATH=$PYTHONPATH:$(pwd)
           pytest medical_warehouse/tests/
