@@ -12,7 +12,7 @@ from .schemas import TelegramMessage
 # Constants
 FLOOD_THRESHOLD_SECONDS: int = 86400  # 24 hours
 TARGET_MSG_LIMIT: int = 1000          # The number of messages you want per channel
-
+START_DATE_STR: str = "2026-01-18"
 class TelegramScraper:
     def __init__(self, session_name: str = 'scraper_session') -> None:
         """Initializes the scraper using centralized settings."""

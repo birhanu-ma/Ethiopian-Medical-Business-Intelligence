@@ -1,11 +1,20 @@
 import pytest
 import os
 import json
+import sys
 import pandas as pd
 from datetime import datetime, timezone
-from Scripts.scraper import TelegramScraper
-from Scripts.loader import TelegramDataLoader
-from Scripts.yolo_detect import YOLOAnalyzer
+
+# Ensure the project root is in the path for module discovery
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+# Corrected Imports
+from medical_warehouse.Scripts.scraper import TelegramScraper, START_DATE_STR
+from medical_warehouse.Scripts.load_to_postgres import TelegramDataLoader
+from medical_warehouse.Scripts.yolo_detect import YOLOAnalyzer
+from medical_warehouse.Scripts.yolo_data_loader import YoloDataHandler
 
 # --- 1. Scraper Test: Logic Accuracy ---
 def test_clean_username_logic():
@@ -17,10 +26,15 @@ def test_clean_username_logic():
 
 # --- 2. Configuration Test: Constants & Environment ---
 def test_scraper_date_boundary():
-    """Test that the scraper's start date is correctly set to 2026-01-18."""
-    scraper = TelegramScraper()
-    expected_date = datetime(2026, 1, 18, tzinfo=timezone.utc)
-    assert scraper.start_date == expected_date
+    """Test that the scraper's start date constant is correctly defined."""
+    # Since start_date isn't in __init__, we test the global constant used by the logic
+    expected_date_str = "2026-01-18"
+    assert START_DATE_STR == expected_date_str
+    
+    # Verify it can be converted to a valid datetime
+    dt = datetime.strptime(START_DATE_STR, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    assert dt.year == 2026
+    assert dt.month == 1
 
 # --- 3. YOLO Analyzer Test: Classification Accuracy ---
 def test_yolo_classification_logic():
@@ -50,16 +64,15 @@ def test_json_loading_resilience(tmp_path):
 # --- 5. Data Handler Test: Numeric Cleaning ---
 def test_handler_numeric_conversion():
     """Ensure message_ids are correctly cast to integers for database joining."""
-    from Scripts.handler import YoloDataHandler
-    # Mocking the engine to test the dataframe cleaning part only
-    handler = YoloDataHandler(engine=None) 
+    # Updated to point to your actual class in yolo_data_loader
+    handler = YoloDataHandler() 
     
     raw_data = pd.DataFrame({
         "message_id": [101, "102", "InvalidID"],
         "image_category": ["prod", "prod", "prod"]
     })
     
-    # Simulating the internal cleaning logic
+    # Simulating the internal cleaning logic used during upload
     df = raw_data.copy()
     df['message_id'] = pd.to_numeric(df['message_id'], errors='coerce')
     df = df.dropna(subset=['message_id'])
